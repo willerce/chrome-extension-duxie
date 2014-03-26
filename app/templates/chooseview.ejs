@@ -1,0 +1,21 @@
+<div class="duxie-overlay"></div>
+<div class="duxie-dialog">
+    <div>
+        <% _.each(selectedTextArray, function(item, index){ %>
+        <span><%- item %></span>
+        (<span data-han="<%- inputTextArray[index] %>"><%- pinyinArray[index][0] %></span>)
+        <% }); %>
+    </div>
+    <div>
+        <% _.each(selectedTextArray, function(item, index){ %>
+        <span><%- item %></span>
+        <select class="js-tones-select" data-han="<%- inputTextArray[index] %>">
+            <% _.each(pinyinArray[index], function(pitem, pindex){ %>
+            <option value="<%- pitem %>"><%- pitem %></option>
+            <% }); %>
+            <option disabled value=""><%- inputTextArray[index] %></option>
+        </select>
+        <% }); %>
+    </div>
+    <button id="js-ok">搞定</button>
+</div>

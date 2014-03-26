@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "读(xiě)",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "chrome-extension-duxie",
+    "description": "The description of the application"
+  }
+}
