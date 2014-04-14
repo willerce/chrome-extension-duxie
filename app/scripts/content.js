@@ -1,121 +1,97 @@
 function DuXie(options) {
-    if (!options.selectedText) {
-        return;
-    }
     this.initialize(options);
 }
 
 DuXie.prototype.initialize = function (options) {
-    var _this = this;
-    var selectedText = options.selectedText;
-    var el = options.el;
-
-    var selectedTextArray = selectedText.split('');
+    var write = options.write || "";
+    var callback = options.callback;
 
     //初始化提示框
-    var tpl = window["JST"]["app/templates/dialog.ejs"];
-    $('body').append($(tpl()));
-    this.$dialog_el = $('#duxieapp');
+    var app_tpl = window["JST"]["app/templates/dialog.ejs"];
+    var result_tpl = window["JST"]["app/templates/chooseview.ejs"];
+    $('body').append($(app_tpl({write: write})));
 
-    this.showInputView(selectedTextArray.length, function (inputText) {
-        _this.showChooseView(selectedTextArray, inputText, function (pinyin) {
-            var result = _this.buildResultString(selectedTextArray, pinyin)
-            _this.replaceInnerText(el, selectedText, result);
-            _this.$dialog_el.remove();
-        });
-    });
-};
+    var $body = $('#duxieapp');
+    var $WRITE = $body.find('#WRITE');
+    var $SAY = $body.find('#SAY');
+    var sayArray = $body.find('#SAY').val().split('');
+    var writeArray = $body.find('#WRITE').val().split('')
+    var pinyinArray = [];
+    var resultStr = "";
 
-//设置内容
-DuXie.prototype.setDialogContent = function ($html) {
-    this.$dialog_el.find('#js-content').html($html);
-};
+    if (write == "") {
+        $WRITE.focus();
+    } else {
+        $SAY.focus();
+    }
 
-//显示输入框
-DuXie.prototype.showInputView = function (maxlength, closeCallback) {
-    var tpl = window["JST"]["app/templates/inputview.ejs"];
-    var $template = $(tpl({maxlength: maxlength}));
-
-    $template.find('#js-duxie-enter').click(function () {
-        enter();
-    });
-
-    $template.find('#js-duxie-input').keyup(function (event) {
-        if (event.keyCode === 13) {
-            enter();
+    $WRITE.blur(function () {
+        if ($SAY.val() === "") {
+            $SAY.focus();
         }
     });
 
-    var enter = function () {
-        var inpu_text = $template.find('#js-duxie-input').val();
-        closeCallback(inpu_text);
-    };
+    $SAY.on('keyup', function () {
+        var reg = /^[\u4E00-\u9FA5]+$/;
+        if (reg.test($WRITE.val()) && reg.test($SAY.val())) {
 
-    this.setDialogContent($template);
-
-    this.$dialog_el.find('#js-duxie-input').focus();
-
-};
-
-//显示音节选择
-DuXie.prototype.showChooseView = function (selectedTextArray, inputText, closeCallback) {
-    var _this = this;
-    var inputTextArray = inputText.split('');
-    var pinyinArray = [];
-
-    //循环得到对应的拼音
-    for (var i = 0; i < inputTextArray.length; i++) {
-
-        //得到拼音，数组类型
-        var tmpPY = window.pinyin(inputTextArray[i], {heteronym: true})[0];
-
-        pinyinArray.push(tmpPY);
-    }
-
-    var tpl = window["JST"]["app/templates/chooseview.ejs"];
-    var $template = $(tpl({
-        selectedTextArray: selectedTextArray,
-        inputTextArray: inputTextArray,
-        pinyinArray: pinyinArray
-    }));
-
-    this.$dialog_el.html($template);
-
-    this.$dialog_el.find('.js-tones-select').change(function (e) {
-        onSelectChange(e);
+            if ($WRITE.length > 0 && $SAY.length > 0 && $WRITE.val().length === $SAY.val().length) {
+                showResult();
+            } else {
+                $body.find("#duxie_result").empty();
+            }
+        } else {
+            $body.find("#duxie_result").empty();
+        }
     });
 
-    var onSelectChange = function (e) {
+    $body.on('change', '.js-tones-select', function (e) {
         //下拉框修改
         var el = $(e.currentTarget);
-        _this.$dialog_el.find('span[data-han="' + el.attr('data-han') + '"]').html(el.val());
-    };
+        $body.find('span[data-han="' + el.attr('data-han') + '"]').html(el.val());
+    });
 
-    this.$dialog_el.find('#js-ok').click(function () {
+    $body.on('click', '#js-ok', function () {
         var arr = [];
         $('.js-tones-select').each(function (index, item) {
             arr.push($(item).val());
         });
-        closeCallback(arr);
+
+        for (var i = 0; i < sayArray.length; i++) {
+            resultStr = resultStr + writeArray[i] + "(" + arr[i] + ")";
+        }
+
+        console.log('结果：' + resultStr);
+        callback(resultStr);
+        $body.remove();
     });
 
-};
+    var showResult = function () {
+        sayArray = $body.find('#SAY').val().split('');
+        writeArray = $body.find('#WRITE').val().split('')
+        pinyinArray = [];
+        resultStr = "";
 
-DuXie.prototype.buildResultString = function (inputTextArray, pinYinArray) {
+        //循环得到对应的拼音
+        for (var i = 0; i < writeArray.length; i++) {
+            pinyinArray.push(window.pinyin(sayArray[i], {heteronym: true})[0]);
+        }
 
-    var str = "";
-    for (var i = 0; i < inputTextArray.length; i++) {
-        str = str + inputTextArray[i] + "(" + pinYinArray[i] + ")";
-    }
-    console.log('结果：' + str);
-    return str;
-
+        //渲染
+        $body.find("#duxie_result").html(result_tpl({
+            selectedTextArray: writeArray,
+            inputTextArray: sayArray,
+            pinyinArray: pinyinArray
+        }));
+    };
 };
 
 //替换
-DuXie.prototype.replaceInnerText = function ($el, selectedText, replaceText) {
+function replaceInnerText($el, selectedText, replaceText) {
     if ($el.html().indexOf(selectedText) >= 0) {
         $el.html($el.html().replace(selectedText, replaceText));
+    } else if ($el.val().indexOf(selectedText) >= 0) {
+        $el.val($el.val().replace(selectedText, replaceText));
     } else {
         $el.find('input,textarea').each(function (index, item) {
             if ($(item).val().indexOf(selectedText) >= 0) {
@@ -123,15 +99,70 @@ DuXie.prototype.replaceInnerText = function ($el, selectedText, replaceText) {
             }
         });
     }
-};
+}
+
+//
+//$(document).ready(function () {
+//    var duxie = new DuXie({});
+//});
 
 chrome.extension.onMessage.addListener(function (request, sender, sendResponse) {
-    var el = window.getSelection().anchorNode;
-    if (el.nodeType === 3) {
-        el = el.parentNode;
-    }
-    if (el) {
-        var duxie = new DuXie({selectedText: request.text, el: $(el)});
+
+    var el = document.activeElement;
+    var el_tag = el.tagName;
+
+    if (request.info.editable && request.info.selectionText) {
+        if (el) {
+            var duxie = new DuXie({ write: request.info.selectionText, callback: function (result) {
+                replaceInnerText($(el), request.info.selectionText, result);
+            }});
+        }
+    } else {
+        var ss = 0;
+        var thisTagName = el_tag;
+
+        if (thisTagName == "TEXTAREA" || thisTagName == "INPUT") {
+            ss = el.selectionStart
+        } else if (thisTagName != null) {
+            if (thisTagName == el.tagName) {
+                if (window.getSelection().anchorNode.textContent == $(el).text()) {
+                    ss = window.getSelection().anchorOffset;
+                } else {
+                    var currentIndex = window.getSelection().anchorOffset;
+                    var txt = "";
+                    var txtoo = window.getSelection().anchorNode.previousSibling;
+                    while (txtoo != null) {
+                        txt += txtoo.textContent;
+                        txtoo = txtoo.previousSibling;
+                        ss = txt.length + currentIndex;
+                    }
+                }
+            }
+        }
+
+        new DuXie({callback: function (result) {
+            var $el = $(el);
+            var text = "";
+
+            var insertIndex = function (text, index) {
+
+                var one = text.substring(0, index);
+                var two = text.substring(index);
+
+                return one + result + two;
+            }
+
+            if (thisTagName == "TEXTAREA" || thisTagName == "INPUT") {
+                text = $el.val();
+                text = insertIndex(text, ss);
+                $el.val(text);
+            } else if (thisTagName != null) {
+                text = $el.text();
+                text = insertIndex(text, ss);
+                $el.text(text);
+            }
+
+        }});
     }
 });
 

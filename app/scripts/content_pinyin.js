@@ -26,9 +26,9 @@
     delete dict_combo;
 
     // 声母表。
-    var INITIALS = "zh,ch,sh,b,p,m,f,d,t,n,l,g,k,h,j,q,x,r,z,c,s,yu,y,w".split(",");
+    var INITIALS = "en,ch,sh,b,p,m,f,d,t,n,l,g,k,h,j,q,x,r,z,c,s,yu,y,w".split(",");
     // 韵母表。
-    var FINALS = "ang,eng,ing,ong,an,zh,in,un,er,ai,ei,ui,ao,ou,iu,ie,ve,a,o,e,i,u,v".split(",");
+    var FINALS = "ang,eng,ing,ong,an,en,in,un,er,ai,ei,ui,ao,ou,iu,ie,ve,a,o,e,i,u,v".split(",");
     var PINYIN_STYLE = {
         NORMAL: 0,  // 普通风格，不带音标。
         TONE: 1,    // 标准风格，音标在韵母的第一个字母上。

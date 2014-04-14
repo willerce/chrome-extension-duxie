@@ -1,4 +1,22 @@
 <div id="duxieapp">
-    <div class="duxie-overlay"></div>
-    <div class="duxie-dialog" id="js-content"></div>
+  <div class="duxie-overlay"></div>
+  <div class="duxie_app">
+    <div class="duxie_head">读(xiě)</div>
+    <div class="duxie_main" id="js-content">
+
+      <div>
+        <div class="duxie_item">
+          <label for="WRITE">写作：</label>
+          <input class="duxie_input" id="WRITE" type="text" value="<%- write %>" placeholder="输入汉字"/>
+        </div>
+        <div class="duxie_item">
+          <label for="SAY">读作：</label>
+          <input class="duxie_input" id="SAY" type="text" placeholder="输入读法"/>
+        </div>
+      </div>
+
+      <div id="duxie_result" class="duxie_result"></div>
+
+    </div>
+  </div>
 </div>
